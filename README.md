@@ -157,4 +157,11 @@ $ kubectl exec -it django bash
 $ ./manage.py shell
 ```
 
+4) Запустите сайт Django
+
+- Пробросить порт(в примере пробросится на 127.0.0.1:6789)
+
+```sh
+$ kubectl port-forward django 6789:80
+```
 
