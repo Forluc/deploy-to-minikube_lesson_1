@@ -126,6 +126,7 @@ $ kubectl delete pod nginx
 ```sh
 $ kubectl run django --image=OWNER/IMAGE_NAME --env='KEY=VALUE'
 ```
+
 Для проверки работоспособности пода, посмотрите его наличие, войдите в кластер и запустите команду django shell:
 
 ```sh
@@ -134,5 +135,26 @@ $ kubectl exec -it django bash # Войти в под
 $ ./manage.py shell
 ```
 
+3) Запустите базу данных снаружи кластера:
+
+- В файле docker-compose в db.ports присвойте свой локальный адрес
+- Запустите базу данных командой:
+
+```sh
+$ sudo docker compose up
+```
+
+- Запустите под и передайте `env` аргументы(IP_ADDRESS, SECRET_KEY):
+
+```sh
+$ kubectl run django --image=OWNER/IMAGE_NAME --env='DATABASE_URL=postgres://test_k8s:OwOtBep9Frut@IP_ADDRESS:5432/test_k8s' --env='SECRET_KEY=REPLACE_ME'
+```
+
+- Войдите в под и проверьте что БД работает(можно посмотреть юзеров в бд):
+
+```sh
+$ kubectl exec -it django bash
+$ ./manage.py shell
+```
 
 
