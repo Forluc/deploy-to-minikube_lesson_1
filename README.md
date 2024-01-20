@@ -104,3 +104,18 @@ $ minikube start
 ```sh
 $ kubectl cluster-info
 ```
+
+Пример запуска веб-сервера nginx в кластере и проброс порта(для просмотра на localhost):
+
+```sh
+$ kubectl run nginx --image=nginx
+$ kubectl port-forward nginx 7788:80 # Запустится на 127.0.0.1:7788
+```
+
+Удалить ранее созданный pod nginx, можно командой:
+
+```sh
+$ kubectl delete pod nginx
+```
+
+
