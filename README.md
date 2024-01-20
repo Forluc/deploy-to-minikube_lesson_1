@@ -118,4 +118,21 @@ $ kubectl port-forward nginx 7788:80 # Запустится на 127.0.0.1:7788
 $ kubectl delete pod nginx
 ```
 
+2) Загрузите образ Django в кластер:
+
+- Загрузите образ на [DockerHub](https://hub.docker.com/)
+- Загрузите образ в кластер командой(если нужно передайте `env`):
+
+```sh
+$ kubectl run django --image=OWNER/IMAGE_NAME --env='KEY=VALUE'
+```
+Для проверки работоспособности пода, посмотрите его наличие, войдите в кластер и запустите команду django shell:
+
+```sh
+$ kubectl get pods # Получить все поды
+$ kubectl exec -it django bash # Войти в под
+$ ./manage.py shell
+```
+
+
 
