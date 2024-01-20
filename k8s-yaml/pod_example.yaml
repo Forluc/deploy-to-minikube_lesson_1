@@ -1,0 +1,18 @@
+apiVersion : v1
+kind: Pod
+metadata:
+  name: my-pod-django
+  labels:
+    app: django-pod
+    owner: forluc
+spec:
+  containers:
+    - name : django
+      image: forluc/django_app
+      env:
+        - name: SECRET_KEY
+          value: "REPLACE_ME"
+        - name: DATABASE_URL
+          value: "postgres://test_k8s:OwOtBep9Frut@192.168.0.103:5432/test_k8s"
+      ports:
+        - containerPort: 80
