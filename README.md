@@ -91,77 +91,74 @@ $ docker compose build web
 `DATABASE_URL` -- адрес для подключения к базе данных PostgreSQL. Другие СУБД сайт не
 поддерживает. [Формат записи](https://github.com/jacobian/dj-database-url#url-schema).
 
-## Развертывание Kubernetes кластера с помощью Minikube
+## Деплой [Kubernetes](https://kubernetes.io/) кластера с помощью [Minikube](https://minikube.sigs.k8s.io/docs/)
 
-1) Установить `Kubectl`, `VirtualBox`, `Minikube`, запустить minikube:
+1) Установить [`Kubectl`](https://kubernetes.io/ru/docs/tasks/tools/install-kubectl/), [`VirtualBox`](https://www.virtualbox.org/), [`Minikube`](https://kubernetes.io/ru/docs/tasks/tools/install-minikube/), [`Helm`](https://helm.sh/) запустить minikube:
 
 ```sh
 $ minikube start
 ```
 
-Получите информацию о кластере(для проверки):
+2) Включите [Ingress](https://habr.com/ru/companies/slurm/articles/358824/)
 
 ```sh
-$ kubectl cluster-info
+$ minikube addons enable ingress
+$ kubectl apply -f k8s-yaml/ingress_example.yaml
 ```
 
-Пример запуска веб-сервера nginx в кластере и проброс порта(для просмотра на localhost):
+3) Пропишите в `etc/hosts` ip minikube:
+
+Узнайте `ip address minikube`:
 
 ```sh
-$ kubectl run nginx --image=nginx
-$ kubectl port-forward nginx 7788:80 # Запустится на 127.0.0.1:7788
+$ minikube ip
+```
+В файл `hosts` добавить(после этого можно будет заходить на сайт `star-burger.test` вместо цифр):
+```
+...
+192.168.1.1 star-burger.test www.star-burger.test
+...
 ```
 
-Удалить ранее созданный pod nginx, можно командой:
+4) Загрузите образ `backend_main_django` в [DockerHub](https://hub.docker.com/)
+
+5) Разверните БД в контейнере. Вот [несколько способов](https://yeah366.com/2023/01/How-to-deploy-PostgreSQL-in-Kubernetes/#45_kubectl__PostgreSQL_557) для деплоя. Пример:
 
 ```sh
-$ kubectl delete pod nginx
+$ helm repo add bitnami https://charts.bitnami.com/bitnami
+$ helm repo update
+$ helm install psql-test1 bitnami/postgresql
+$ export POSTGRES_PASSWORD=$(kubectl get secret --namespace default psql-test1-postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
+$ kubectl run psql-test1-postgresql-client --rm --tty -i --restart='Never' --namespace default --image docker.io/bitnami/postgresql:15.1.0-debian-11-r19 --env="PGPASSWORD=$POSTGRES_PASSWORD" --command -- psql --host psql-test1-postgresql -U postgres -d postgres -p 5432
 ```
 
-2) Загрузите образ Django в кластер:
+Создайте БД [Postgres](https://www.postgresql.org/):
+```
+CREATE DATABASE yourdbname;
+CREATE USER youruser WITH ENCRYPTED PASSWORD 'yourpass';
+GRANT ALL PRIVILEGES ON DATABASE yourdbname TO youruser;
+ALTER USER youruser SUPERUSER;
+\conninfo # Скопировать host db
+```
+Данные БД скопировать и заменить в файле `k8s-yaml/configmap_example.yaml`:
+```
+...
+DATABASE_URL : "postgres://<youruser>:<yourpass>@<yourhost>:5432/<yourdbname>"
+...
+```
 
-- Загрузите образ на [DockerHub](https://hub.docker.com/)
-- Загрузите образ в кластер командой(если нужно передайте `env`):
+6) Сохраните [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/), примените миграции и задеплойте сервис django:
 
 ```sh
-$ kubectl run django --image=OWNER/IMAGE_NAME --env='KEY=VALUE'
+$ kubectl apply -f k8s-yaml/configmap_example.yaml
+$ kubectl apply -f k8s-yaml/migrate_example.yaml
+$ kubectl apply -f k8s-yaml/deploy_example.yaml
 ```
 
-Для проверки работоспособности пода, посмотрите его наличие, войдите в кластер и запустите команду django shell:
+7) Автоматическое удаление сессий Django-приложения(1 числа каждого месяца в 00:00) c помощью [CronJobs](https://tproger.ru/translations/guide-to-cron-jobs):
 
 ```sh
-$ kubectl get pods # Получить все поды
-$ kubectl exec -it django bash # Войти в под
-$ ./manage.py shell
+$ kubectl apply -f k8s-yaml/django_clearsession_pod_example.yaml
 ```
 
-3) Запустите базу данных снаружи кластера:
-
-- В файле docker-compose в db.ports присвойте свой локальный адрес
-- Запустите базу данных командой:
-
-```sh
-$ sudo docker compose up
-```
-
-- Запустите под и передайте `env` аргументы(IP_ADDRESS, SECRET_KEY):
-
-```sh
-$ kubectl run django --image=OWNER/IMAGE_NAME --env='DATABASE_URL=postgres://test_k8s:OwOtBep9Frut@IP_ADDRESS:5432/test_k8s' --env='SECRET_KEY=REPLACE_ME'
-```
-
-- Войдите в под и проверьте что БД работает(можно посмотреть юзеров в бд):
-
-```sh
-$ kubectl exec -it django bash
-$ ./manage.py shell
-```
-
-4) Запустите сайт Django
-
-- Пробросить порт(в примере пробросится на 127.0.0.1:6789)
-
-```sh
-$ kubectl port-forward django 6789:80
-```
 
