@@ -1,42 +1,42 @@
 apiVersion : apps/v1
 kind: Deployment
 metadata:
-  name: my-deployment-django
+  name: django-app-deployment
   labels:
-    app: django-deploy
+    app.kubernetes.io/name: django-app
     owner: forluc
 spec:
   selector:
     matchLabels:
-      project: django-k8s
+      app.kubernetes.io/name: django-app
   template:
     metadata:
       labels:
-        project: django-k8s
+        app.kubernetes.io/name: django-app
+        owner: forluc
     spec:
       containers:
-        - name: django-k8s
+        - name: django
           image: forluc/django_app
-          env:
-            - name: SECRET_KEY
-              valueFrom:
-                configMapKeyRef:
-                  name: django-cm
-                  key: SECRET_KEY
-            - name: DATABASE_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: django-cm
-                  key: DATABASE_URL
-            - name: DEBUG
-              valueFrom:
-                configMapKeyRef:
-                  name: django-cm
-                  key: DEBUG
-            - name: ALLOWED_HOSTS
-              valueFrom:
-                configMapKeyRef:
-                  name: django-cm
-                  key: ALLOWED_HOSTS
+          envFrom:
+            - configMapRef:
+                name: django-cm
           ports:
             - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-app-deployment
+  labels:
+    app.kubernetes.io/name: django-app
+spec:
+  type: ClusterIP
+  ports:
+    - name: external-port
+      port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: django-app
+
