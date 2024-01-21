@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrations
+  labels:
+    name: django-app
+    component: migrations
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 30
+  template:
+    metadata:
+      labels:
+        name: django-app
+        component: migrations
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrations
+          image: forluc/django_app
+          envFrom:
+            - configMapRef:
+                name: django-cm
+          imagePullPolicy: IfNotPresent
+          command:
+            - ./manage.py
+            - migrate
