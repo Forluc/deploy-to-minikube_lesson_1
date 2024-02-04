@@ -153,6 +153,7 @@ DATABASE_URL : "postgres://<youruser>:<yourpass>@<yourhost>:5432/<yourdbname>"
 $ kubectl apply -f k8s-yaml/configmap_example.yaml
 $ kubectl apply -f k8s-yaml/migrate_example.yaml
 $ kubectl apply -f k8s-yaml/deploy_example.yaml
+$ kubectl apply -f k8s-yaml/service_example.yaml
 ```
 
 7) Автоматическое удаление сессий Django-приложения(1 числа каждого месяца в 00:00) c помощью [CronJobs](https://tproger.ru/translations/guide-to-cron-jobs):
