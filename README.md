@@ -101,6 +101,8 @@ $ minikube start
 
 2) Включите [Ingress](https://habr.com/ru/companies/slurm/articles/358824/)
 
+Выберете и установите нужный Ingress, согласно [документации](https://docs.google.com/spreadsheets/d/191WWNpjJ2za6-nbG4ZoUMXMpUK8KlCIosvQB0f-oq3k/edit#gid=907731238)
+
 ```sh
 $ minikube addons enable ingress
 $ kubectl apply -f k8s-yaml/ingress_example.yaml
