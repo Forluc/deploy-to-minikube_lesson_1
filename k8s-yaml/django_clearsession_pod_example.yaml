@@ -21,8 +21,8 @@ spec:
           - name   : django-app
             image  : forluc/django_app
             envFrom:
-              - configMapRef:
-                  name: django-cm
+              - secretMapRef:
+                  name: django-secret
             imagePullPolicy: IfNotPresent
             command:
             - ./manage.py
