@@ -21,6 +21,8 @@ spec:
           envFrom:
             - secretMapRef:
                 name: django-secret
+            - configMapRef:
+                name: django-configmap
           imagePullPolicy: IfNotPresent
           command:
             - ./manage.py

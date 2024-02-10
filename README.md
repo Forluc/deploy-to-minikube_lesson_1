@@ -142,16 +142,18 @@ GRANT ALL PRIVILEGES ON DATABASE yourdbname TO youruser;
 ALTER USER youruser SUPERUSER;
 \conninfo # Скопировать host db
 ```
-Данные БД скопировать и заменить в файле `k8s-yaml/secret_example.yaml`:
+Данные БД скопировать и заменить в файле `k8s-yaml/secret_example.yaml`. Изменить SecretKey django:
 ```
 ...
-DATABASE_URL : "postgres://<youruser>:<yourpass>@<yourhost>:5432/<yourdbname>"
+DATABASE_URL: "postgres://<youruser>:<yourpass>@<yourhost>:5432/<yourdbname>"
+SECRET_KEY: "REPLACE_me_pls"
 ...
 ```
 
 6) Сохраните [Secret](https://kubernetes.io/docs/concepts/configuration/secret/), примените миграции и задеплойте сервис django:
 
 ```sh
+$ kubectl apply -f k8s-yaml/configmap_example.yaml
 $ kubectl apply -f k8s-yaml/secret_example.yaml
 $ kubectl apply -f k8s-yaml/migrate_example.yaml
 $ kubectl apply -f k8s-yaml/deploy_example.yaml
